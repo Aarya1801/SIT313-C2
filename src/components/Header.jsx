@@ -10,7 +10,7 @@ function Header() {
       <nav className="main-nav" aria-label="Main navigation">
         <label className="visually-hidden" htmlFor="site-search">Search</label>
         <input id="site-search" type="search" placeholder="Search..." />
-        <button type="button">Post</button>
+        <Link to="/post">Post</Link>
         <Link to="/login">Login</Link>
       </nav>
     </header>

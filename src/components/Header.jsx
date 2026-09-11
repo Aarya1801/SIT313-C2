@@ -1,16 +1,17 @@
+import { Link } from 'react-router-dom'
+
 function Header() {
   return (
     <header className="site-header">
-      <a className="brand" href="#top">
+      <Link className="brand" to="/">
         <strong>DEV@Deakin</strong>
-        <span>Aarya Patel</span>
-      </a>
+      </Link>
 
       <nav className="main-nav" aria-label="Main navigation">
-        <a href="#top">Home</a>
-        <a href="#articles">Articles</a>
-        <a href="#tutorials">Tutorials</a>
-        <a href="#subscribe">Newsletter</a>
+        <label className="visually-hidden" htmlFor="site-search">Search</label>
+        <input id="site-search" type="search" placeholder="Search..." />
+        <button type="button">Post</button>
+        <Link to="/login">Login</Link>
       </nav>
     </header>
   )

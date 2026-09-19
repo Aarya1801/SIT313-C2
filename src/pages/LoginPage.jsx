@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { verifyLoginCredentials } from '../services/userService'
 import { loginSchema } from '../validation/authSchemas'
+import { useAuth } from '../context/AuthContext'
 
 function LoginPage() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('')
@@ -43,16 +45,18 @@ function LoginPage() {
     setIsProcessing(true)
 
     try {
-      const isValid = await verifyLoginCredentials(
+      const result = await verifyLoginCredentials(
         validation.data.email,
         validation.data.password,
       )
 
-      if (!isValid) {
+      if (!result) {
         setStatus('Email or password is incorrect. Please try again or create a free account.')
         return
       }
 
+      // Save the session before returning to the home page.
+      login(result.token, result.user)
       navigate('/')
     } catch {
       setStatus('Unable to log in right now. Please try again.')

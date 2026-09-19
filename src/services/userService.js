@@ -1,68 +1,54 @@
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
-import db from '../firebase'
-import { hashPassword, verifyPassword } from '../utils/password'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
-const encoder = new TextEncoder()
+// Keep account and subscription requests in one small API helper.
+async function request(path, options = {}) {
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+  })
+  const data = await response.json()
 
-function normalizeEmail(email) {
-  return email.trim().toLowerCase()
-}
-
-async function getEmailDocumentKey(email) {
-  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(email))
-
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')
-}
-
-async function getUserReference(email) {
-  const normalizedEmail = normalizeEmail(email)
-  const documentKey = await getEmailDocumentKey(normalizedEmail)
-
-  return {
-    normalizedEmail,
-    reference: doc(db, 'users', documentKey),
+  if (!response.ok) {
+    const error = new Error(data.message || 'Request failed')
+    error.status = response.status
+    throw error
   }
-}
 
-export async function userExists(email) {
-  const { reference } = await getUserReference(email)
-  const snapshot = await getDoc(reference)
-
-  return snapshot.exists()
+  return data
 }
 
 export async function registerUser({ fullName, email, password }) {
-  const { normalizedEmail, reference } = await getUserReference(email)
-  const existingUser = await getDoc(reference)
-
-  if (existingUser.exists()) {
-    return { success: false, reason: 'duplicate-email' }
+  try {
+    return await request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ fullName, email, password }),
+    })
+  } catch (error) {
+    if (error.status === 409) return { success: false, reason: 'duplicate-email' }
+    throw error
   }
-
-  const { passwordHash, passwordSalt } = await hashPassword(password)
-
-  await setDoc(reference, {
-    fullName: fullName.trim(),
-    email: normalizedEmail,
-    passwordHash,
-    passwordSalt,
-    createdAt: serverTimestamp(),
-  })
-
-  return { success: true }
 }
 
 export async function verifyLoginCredentials(email, password) {
-  const { reference } = await getUserReference(email)
-  const snapshot = await getDoc(reference)
-
-  if (!snapshot.exists()) {
-    return false
+  try {
+    return await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+  } catch (error) {
+    if (error.status === 401) return null
+    throw error
   }
+}
 
-  const user = snapshot.data()
+export function getCurrentUser(token) {
+  return request('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+}
 
-  return verifyPassword(password, user.passwordSalt, user.passwordHash)
+export function upgradePlan(token) {
+  return request('/users/plan', {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ plan: 'paid' }),
+  })
 }

@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import SignUpPage from './pages/SignUpPage'
 import PostPage from './pages/PostPage'
+import PricingPage from './pages/PricingPage'
 
 function App() {
   const { pathname } = useLocation()
@@ -24,6 +25,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/post" element={<PostPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
         </Routes>
       </main>
       <Footer />

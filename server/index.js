@@ -16,22 +16,27 @@ const firebaseApp = initializeApp({
   messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.VITE_FIREBASE_APP_ID,
 })
+
 const db = getFirestore(firebaseApp)
 const app = express()
 const port = process.env.PORT || 3001
 const jwtSecret = process.env.JWT_SECRET || 'dev-deakin-local-secret'
 
-app.use(cors({ origin: 'http://localhost:5173' }))
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+
+app.use(cors({ origin: frontendUrl }))
 app.use(express.json())
 app.use(handleMalformedJson)
 app.use('/api', createNewsletterRouter())
 
 const passwordSchema = z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/[0-9]/)
+
 const registrationSchema = z.object({
   fullName: z.string().trim().min(3),
   email: z.string().trim().email(),
   password: passwordSchema,
 })
+
 const loginSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1),
@@ -49,9 +54,18 @@ function hashPassword(password, salt = crypto.randomBytes(16)) {
 }
 
 function verifyPassword(password, salt, expectedHash) {
-  const actual = crypto.pbkdf2Sync(password, Buffer.from(salt, 'base64'), 100000, 32, 'sha256')
+  const actual = crypto.pbkdf2Sync(
+    password,
+    Buffer.from(salt, 'base64'),
+    100000,
+    32,
+    'sha256'
+  )
+
   const expected = Buffer.from(expectedHash, 'base64')
-  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected)
+
+  return actual.length === expected.length &&
+    crypto.timingSafeEqual(actual, expected)
 }
 
 // Only send the fields the frontend needs for the active session.
@@ -67,26 +81,44 @@ function publicUser(id, data) {
 function authenticate(req, res, next) {
   // Protected routes expect the JWT in the standard Authorization header.
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '')
-  if (!token) return res.status(401).json({ message: 'Authentication required.' })
+
+  if (!token) {
+    return res.status(401).json({
+      message: 'Authentication required.',
+    })
+  }
 
   try {
     req.auth = jwt.verify(token, jwtSecret)
     next()
   } catch {
-    res.status(401).json({ message: 'Invalid or expired session.' })
+    res.status(401).json({
+      message: 'Invalid or expired session.',
+    })
   }
 }
 
 app.post('/api/auth/register', async (req, res, next) => {
   try {
     const validation = registrationSchema.safeParse(req.body)
-    if (!validation.success) return res.status(400).json({ message: 'Invalid registration details.' })
+
+    if (!validation.success) {
+      return res.status(400).json({
+        message: 'Invalid registration details.',
+      })
+    }
 
     const { fullName, password } = validation.data
     const email = validation.data.email.toLowerCase()
     const id = userIdForEmail(email)
+
     const reference = doc(db, 'users', id)
-    if ((await getDoc(reference)).exists()) return res.status(409).json({ message: 'Email already registered.' })
+
+    if ((await getDoc(reference)).exists()) {
+      return res.status(409).json({
+        message: 'Email already registered.',
+      })
+    }
 
     await setDoc(reference, {
       fullName: fullName.trim(),
@@ -95,7 +127,10 @@ app.post('/api/auth/register', async (req, res, next) => {
       plan: 'free',
       createdAt: serverTimestamp(),
     })
-    res.status(201).json({ success: true })
+
+    res.status(201).json({
+      success: true,
+    })
   } catch (error) {
     next(error)
   }
@@ -104,20 +139,46 @@ app.post('/api/auth/register', async (req, res, next) => {
 app.post('/api/auth/login', async (req, res, next) => {
   try {
     const validation = loginSchema.safeParse(req.body)
-    if (!validation.success) return res.status(400).json({ message: 'Invalid login details.' })
+
+    if (!validation.success) {
+      return res.status(400).json({
+        message: 'Invalid login details.',
+      })
+    }
 
     const email = validation.data.email.toLowerCase()
     const id = userIdForEmail(email)
-    const snapshot = await getDoc(doc(db, 'users', id))
-    if (!snapshot.exists()) return res.status(401).json({ message: 'Email or password is incorrect.' })
 
-    const user = snapshot.data()
-    if (!verifyPassword(validation.data.password, user.passwordSalt, user.passwordHash)) {
-      return res.status(401).json({ message: 'Email or password is incorrect.' })
+    const snapshot = await getDoc(doc(db, 'users', id))
+
+    if (!snapshot.exists()) {
+      return res.status(401).json({
+        message: 'Email or password is incorrect.',
+      })
     }
 
-    const token = jwt.sign({ userId: id }, jwtSecret, { expiresIn: '24h' })
-    res.json({ token, user: publicUser(id, user) })
+    const user = snapshot.data()
+
+    if (!verifyPassword(
+      validation.data.password,
+      user.passwordSalt,
+      user.passwordHash
+    )) {
+      return res.status(401).json({
+        message: 'Email or password is incorrect.',
+      })
+    }
+
+    const token = jwt.sign(
+      { userId: id },
+      jwtSecret,
+      { expiresIn: '24h' }
+    )
+
+    res.json({
+      token,
+      user: publicUser(id, user),
+    })
   } catch (error) {
     next(error)
   }
@@ -125,9 +186,22 @@ app.post('/api/auth/login', async (req, res, next) => {
 
 app.get('/api/auth/me', authenticate, async (req, res, next) => {
   try {
-    const snapshot = await getDoc(doc(db, 'users', req.auth.userId))
-    if (!snapshot.exists()) return res.status(404).json({ message: 'User not found.' })
-    res.json({ user: publicUser(snapshot.id, snapshot.data()) })
+    const snapshot = await getDoc(
+      doc(db, 'users', req.auth.userId)
+    )
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({
+        message: 'User not found.',
+      })
+    }
+
+    res.json({
+      user: publicUser(
+        snapshot.id,
+        snapshot.data()
+      ),
+    })
   } catch (error) {
     next(error)
   }
@@ -135,14 +209,41 @@ app.get('/api/auth/me', authenticate, async (req, res, next) => {
 
 app.patch('/api/users/plan', authenticate, async (req, res, next) => {
   try {
-    if (req.body.plan !== 'paid') return res.status(400).json({ message: 'Invalid plan.' })
-    const reference = doc(db, 'users', req.auth.userId)
-    const snapshot = await getDoc(reference)
-    if (!snapshot.exists()) return res.status(404).json({ message: 'User not found.' })
+    if (req.body.plan !== 'paid') {
+      return res.status(400).json({
+        message: 'Invalid plan.',
+      })
+    }
 
-    // Payment fields never reach this route; Firestore only receives the plan.
-    await updateDoc(reference, { plan: 'paid' })
-    res.json({ user: publicUser(snapshot.id, { ...snapshot.data(), plan: 'paid' }) })
+    const reference = doc(
+      db,
+      'users',
+      req.auth.userId
+    )
+
+    const snapshot = await getDoc(reference)
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({
+        message: 'User not found.',
+      })
+    }
+
+    // Payment fields never reach this route;
+    // Firestore only receives the selected plan.
+    await updateDoc(reference, {
+      plan: 'paid',
+    })
+
+    res.json({
+      user: publicUser(
+        snapshot.id,
+        {
+          ...snapshot.data(),
+          plan: 'paid',
+        }
+      ),
+    })
   } catch (error) {
     next(error)
   }
@@ -150,7 +251,12 @@ app.patch('/api/users/plan', authenticate, async (req, res, next) => {
 
 app.use((error, req, res, next) => {
   console.error(error)
-  res.status(500).json({ message: 'Server error. Please try again.' })
+
+  res.status(500).json({
+    message: 'Server error. Please try again.',
+  })
 })
 
-app.listen(port, () => console.log(`API running on http://localhost:${port}`))
+app.listen(port, () => {
+  console.log(`API running on port ${port}`)
+})

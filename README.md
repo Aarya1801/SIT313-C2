@@ -1,93 +1,70 @@
-# D1
+# DEV@Deakin — SIT313 Task P5
 
+This project connects the React newsletter form to the existing Express backend. A valid public subscription request is sent to SendGrid, which queues the DEV@Deakin welcome email. Newsletter subscription does not require an account and does not alter Free or Paid plan data.
 
+## Requirements
 
-## Getting started
+- Node.js 20 or newer
+- A SendGrid API key with permission to send mail
+- A sender address verified in SendGrid
+- Firebase configuration for the existing account features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Local configuration
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+1. Copy `.env.example` to `.env`.
+2. Fill in the existing Firebase and JWT settings used by the D1 application.
+3. Set `SENDGRID_API_KEY` to the server-side SendGrid API key.
+4. Set `SENDGRID_FROM_EMAIL` to the verified SendGrid sender address.
 
-## Add your files
+Keep both SendGrid values server-side. Do not prefix them with `VITE_`, commit `.env`, or place either value in frontend code.
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+The frontend uses `VITE_API_URL`, which defaults to `http://localhost:3001/api`. The Express server allows the local Vite origin `http://localhost:5173`.
 
+## Install and start
+
+```sh
+npm install
 ```
-cd existing_repo
-git remote add origin https://gitlab.deakin.edu.au/s223524328/c1.git
-git branch -M main
-git push -uf origin main
+
+Start the backend and frontend in separate terminals:
+
+```sh
+npm run server
 ```
 
-## Integrate with your tools
+```sh
+npm run dev
+```
 
-* [Set up project integrations](https://gitlab.deakin.edu.au/s223524328/c1/-/settings/integrations)
+## Automated verification
 
-## Collaborate with your team
+```sh
+npm test
+npm run lint
+npm run build
+```
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+The newsletter tests use an isolated Express server and an injected fake email sender. They do not initialize Firebase or contact SendGrid, so a passing test does not prove that a real email was accepted or delivered.
 
-## Test and Deploy
+## Manual newsletter verification
 
-Use the built-in continuous integration in GitLab.
+1. Start the backend and frontend with a valid local `.env`.
+2. Open the homepage and submit a valid email address in the newsletter form.
+3. Confirm the form is disabled and displays `Subscribing…` while pending.
+4. Confirm the input clears only after an accepted request and remains populated after failure.
+5. Confirm the backend terminal prints the actual `SendGrid status: 202` response.
+6. Confirm the welcome email arrives, noting that provider acceptance is not a guarantee of delivery.
+7. Check invalid input, missing configuration, and provider failure behaviour without exposing credentials or recipient addresses in logs.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+## P5 evidence checklist
 
-***
+Capture the following after real-provider verification:
 
-# Editing this README
+- The DEV@Deakin homepage and newsletter outcome.
+- The backend terminal showing SendGrid's actual `202` response.
+- The private GitLab project named `Task P5`.
+- Aaron Spence and the marking tutor with Reporter access.
+- Meaningful P5 commit history with `node_modules` excluded.
+- The GitLab repository link and 2–4 minute Panopto walkthrough link.
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Do not use the mocked automated test output as the assessment screenshot for real SendGrid evidence.

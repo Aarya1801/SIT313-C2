@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken'
 import { initializeApp } from 'firebase/app'
 import { doc, getDoc, getFirestore, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { z } from 'zod'
+import { createNewsletterRouter, handleMalformedJson } from './routes/newsletter.js'
 
 const firebaseApp = initializeApp({
   apiKey: process.env.VITE_FIREBASE_API_KEY,
@@ -22,6 +23,8 @@ const jwtSecret = process.env.JWT_SECRET || 'dev-deakin-local-secret'
 
 app.use(cors({ origin: 'http://localhost:5173' }))
 app.use(express.json())
+app.use(handleMalformedJson)
+app.use('/api', createNewsletterRouter())
 
 const passwordSchema = z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/[0-9]/)
 const registrationSchema = z.object({

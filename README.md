@@ -1,4 +1,4 @@
-# DEV@Deakin — SIT313 Task P5
+# DEV@Deakin - SIT313 Task P5
 
 This project connects the React newsletter form to the existing Express backend. A valid public subscription request is sent to SendGrid, which queues the DEV@Deakin welcome email. Newsletter subscription does not require an account and does not alter Free or Paid plan data.
 
@@ -55,16 +55,3 @@ The newsletter tests use an isolated Express server and an injected fake email s
 5. Confirm the backend terminal prints the actual `SendGrid status: 202` response.
 6. Confirm the welcome email arrives, noting that provider acceptance is not a guarantee of delivery.
 7. Check invalid input, missing configuration, and provider failure behaviour without exposing credentials or recipient addresses in logs.
-
-## P5 evidence checklist
-
-Capture the following after real-provider verification:
-
-- The DEV@Deakin homepage and newsletter outcome.
-- The backend terminal showing SendGrid's actual `202` response.
-- The private GitLab project named `Task P5`.
-- Aaron Spence and the marking tutor with Reporter access.
-- Meaningful P5 commit history with `node_modules` excluded.
-- The GitLab repository link and 2–4 minute Panopto walkthrough link.
-
-Do not use the mocked automated test output as the assessment screenshot for real SendGrid evidence.

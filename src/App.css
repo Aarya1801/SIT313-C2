@@ -313,6 +313,23 @@ h1 {
 .subscribe-form button:hover,
 .subscribe-form button:focus-visible { background: #d5ff78; }
 
+.subscribe-form input:disabled,
+.subscribe-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.subscribe-form button:disabled:hover { background: var(--accent); }
+
+.subscribe-feedback {
+  min-height: 1.5rem;
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.subscribe-feedback.success { color: var(--accent); }
+.subscribe-feedback.error { color: #ff8c8c; }
+
 .account-page {
   min-height: 58vh;
   display: grid;

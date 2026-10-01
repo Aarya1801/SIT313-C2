@@ -1,4 +1,4 @@
-# DEV@Deakin - SIT313 Task P5
+# DEV@Deakin - SIT313 Task C2
 
 This project connects the React newsletter form to the existing Express backend. A valid public subscription request is sent to SendGrid, which queues the DEV@Deakin welcome email. Newsletter subscription does not require an account and does not alter Free or Paid plan data.
 
